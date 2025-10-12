@@ -1,4 +1,5 @@
 #Problem: Trouble finding large stale files, search them by age and size
+
 #Command Function
 function Find-StaleLargeFilesBySize {
     [CmdletBinding()] #Advanced Cmdlet - allows for -Verbose param
@@ -9,19 +10,30 @@ function Find-StaleLargeFilesBySize {
         [int]$MinSizeMB = 5,             # Files larger than this are considered large
         [switch]$ExcludeDirectories      # Exclude directories
     )
+
+
+
+
+
     if(-not (Test-Path -Path $Path)){
         Write-Error "Path does not exist:$Path"
         return 0
     }
+
+
+
+
+    #Calculations
     [DateTime]$CutoffDate = (Get-Date).AddDays(-$MaxAgeDays)
     [Int32]$MinSizeBytes = $MinSizeMB * 1MB
     Write-Verbose "Scanning files older than $CutoffDate and larger than $MinSizeMB MB."
 
+    #Class
     class Item {#Class to Generalize Directory/File
         [string]$Name
         [string]$Type
         [string]$Directory
-        [decimal]$Length
+        [decimal]$SizeMB
         [DateTime]$LastWriteTime
         [int]$AgeDays
 
@@ -30,14 +42,17 @@ function Find-StaleLargeFilesBySize {
             $this.Directory = if ($Item -is [System.IO.DirectoryInfo])  {$Item.FullName} else {$Item.Directory}
             $this.LastWriteTime = $Item.LastWriteTime
             $this.Type = if ($Item -is [System.IO.DirectoryInfo]) {'Directory'} else {'File'}
+
             $this.AgeDays = [math]::Round((New-TimeSpan -Start $Item.LastWriteTime -End (Get-Date)).TotalDays, 0)
+
             if ($Item -is [System.IO.FileInfo]) {
-                $this.Length = [math]::Round($Item.Length / 1MB, 2)
+                $this.SizeMB = [math]::Round($Item.Length / 1MB, 2)
             } else {
-                $this.Length = Get-DirectorySizeInBytes -DirectoryPath $Item.FullName
+                $this.SizeMB = [math]::Round((Get-DirectorySizeInBytes -DirectoryPath $Item.FullName) / 1MB, 2)
             }
         }
     }
+    #Parameters
     $Params = @{
         Path = $Path
         ErrorAction = 'SilentlyContinue'
@@ -49,18 +64,15 @@ function Find-StaleLargeFilesBySize {
     if ($ExcludeDirectories) {
         $Params.Add('File', $true)
     }
-
-    Get-ChildItem @Params|
-        ForEach-Object{[Item]::new($_)}|
+    #Main Extraction and Return Value
+    Get-ChildItem @Params |
+        ForEach-Object{[Item]::new($_)} |
         Where-Object { 
             $_.LastWriteTime -lt $CutoffDate -and 
-            $_.Length -GT $MinSizeMB
-            Write-Verbose "LastWriteTime:$($_.LastWriteTime) `t`t Length:$($_.Length) `t`t`t Name:$($_.Name)"
-          } | 
-        Sort-Object -Property Length -Descending
-        Write-Verbose "CutoffDate: $CutOffDate"
-        Write-Verbose "Minimum Size MB: $MinSizeMB"
-        Write-Verbose "Sorted by Descending Length..."
+            $_.SizeMB -gt $MinSizeMB
+            Write-Verbose "LastWriteTime:$($_.LastWriteTime) `t`t SizeMB:$($_.Length) `t`t`t Name:$($_.Name)"
+          }  | 
+        Sort-Object -Property SizeMB -Descending
 }
 #Helper Function
 function Get-DirectorySizeInBytes {
@@ -75,9 +87,16 @@ function Get-DirectorySizeInBytes {
             return 0
         }
     }
+
+
+
+
+
+
+
 #Use of Function as Command
 # Syntax Find-StaleLargeFilesBySize -Path <String path> [-MaxAgeDays <int days>] [-MinSizeMB <int mb>] [-Verbose] [-First <int>]| Format-Table -AutoSize
 
-# Find-StaleLargeFilesBySize -Path ./ -MaxAgeDays 15 -MinSizeMB 5 -Verbose | Select-Object -First 15 | Format-Table -AutoSize | Out-File ./StaleLargeFilesBySize.txt
+Find-StaleLargeFilesBySize -Path ./ -MaxAgeDays 15 -MinSizeMB 5 -Verbose | Select-Object -First 15 | Format-Table -AutoSize  | Out-File ./StaleLargeFilesBySize.txt
 
-Find-StaleLargeFilesBySize -Path ./ -MaxAgeDays 15 -MinSizeMB 5 -Verbose | Select-Object -First 15 | Format-Table -AutoSize
+# File Find-StaleLargeFilesBySize -Path ./ -MaxAgeDays 15 -MinSizeMB 5 -Verbose
