@@ -51,7 +51,7 @@ function Find-StaleLargeFilesBySize {
         $Params.Add('File', $true)
     }
 
-    $StaleLargeFiles = Get-ChildItem @Params|
+    Get-ChildItem @Params|
         ForEach-Object{[Item]::new($_)}|
         Where-Object { 
             $_.LastWriteTime -lt $CutoffDate -and 
@@ -62,17 +62,6 @@ function Find-StaleLargeFilesBySize {
         Write-Verbose "CutoffDate: $CutOffDate"
         Write-Verbose "Minimum Size MB: $MinSizeMB"
         Write-Verbose "Sorted by Descending Length..."
-
-    foreach ($File in $StaleLargeFiles) {
-        [pscustomobject]@{
-            FileName       = $File.Name
-            Type = $File.Type
-            Directory      = $File.Directory
-            SizeMB         = $File.Length
-            LastModified   = $File.LastWriteTime
-            AgeDays        = $File.LastWriteTime
-        }
-    }
 }
 #Helper Function
 function Get-DirectorySizeInBytes {
