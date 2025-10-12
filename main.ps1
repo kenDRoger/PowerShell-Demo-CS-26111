@@ -68,9 +68,9 @@ function Find-StaleLargeFilesBySize {
             FileName       = $File.Name
             Type = $File.Type
             Directory      = $File.Directory
-            SizeMB         = [math]::Round($File.Length / 1MB, 2)
+            SizeMB         = $File.Length
             LastModified   = $File.LastWriteTime
-            AgeDays        = [math]::Round((New-TimeSpan -Start $File.LastWriteTime -End (Get-Date)).TotalDays, 0)
+            AgeDays        = $File.LastWriteTime
         }
     }
 }
