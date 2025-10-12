@@ -68,9 +68,9 @@ function Find-StaleLargeFilesBySize {
             FileName       = $File.Name
             Type = $File.Type
             Directory      = $File.Directory
-            SizeMB         = $File.Length
+            SizeMB         = [math]::Round($File.Length / 1MB, 2)
             LastModified   = $File.LastWriteTime
-            AgeDays        = $File.LastWriteTime
+            AgeDays        = [math]::Round((New-TimeSpan -Start $File.LastWriteTime -End (Get-Date)).TotalDays, 0)
         }
     }
 }
@@ -89,4 +89,7 @@ function Get-DirectorySizeInBytes {
     }
 #Use of Function as Command
 # Syntax Find-StaleLargeFilesBySize -Path <String path> [-MaxAgeDays <int days>] [-MinSizeMB <int mb>] [-Verbose] [-First <int>]| Format-Table -AutoSize
-Find-StaleLargeFilesBySize -Path ./ -MaxAgeDays 15 -MinSizeMB 5 -Verbose | Select-Object -First 15 | Format-Table -AutoSize | Out-File ./StaleLargeFilesBySize.txt
+
+# Find-StaleLargeFilesBySize -Path ./ -MaxAgeDays 15 -MinSizeMB 5 -Verbose | Select-Object -First 15 | Format-Table -AutoSize | Out-File ./StaleLargeFilesBySize.txt
+
+Find-StaleLargeFilesBySize -Path ./ -MaxAgeDays 15 -MinSizeMB 5 -Verbose | Select-Object -First 15 | Format-Table -AutoSize
