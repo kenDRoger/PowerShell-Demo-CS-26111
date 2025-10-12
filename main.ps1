@@ -34,7 +34,7 @@ function Find-StaleLargeFilesBySize {
             if ($Item -is [System.IO.FileInfo]) {
                 $this.Length = [math]::Round($Item.Length / 1MB, 2)
             } else {
-                $this.Length = Get-DirectorySizeInBytes -DirectoryPath $Item.DirectoryName
+                $this.Length = Get-DirectorySizeInBytes -DirectoryPath $Item.FullName
             }
         }
     }
