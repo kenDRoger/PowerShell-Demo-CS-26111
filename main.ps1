@@ -88,5 +88,5 @@ function Get-DirectorySizeInBytes {
         }
     }
 #Use of Function as Command
-# Syntax Find-StaleLargeFilesBySize -Path <String path> -MaxAgeDays <int days> -MinSizeMB <int mb> -Verbose| Format-Table -Wrap -AutoSize
-Find-StaleLargeFilesBySize -Path $env:HOMEPATH -MaxAgeDays 1 -MinSizeMB 1 -Verbose| Format-Table -Wrap -AutoSize
+# Syntax Find-StaleLargeFilesBySize -Path <String path> [-MaxAgeDays <int days>] [-MinSizeMB <int mb>] [-Verbose] [-First <int>]| Format-Table -AutoSize
+Find-StaleLargeFilesBySize -Path ./ -MaxAgeDays 15 -MinSizeMB 5 -Verbose | Select-Object -First 15 | Format-Table -AutoSize | Out-File ./StaleLargeFilesBySize.txt
