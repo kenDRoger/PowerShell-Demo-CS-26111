@@ -7,7 +7,8 @@ function Find-StaleLargeFilesBySize {
         [string]$Path,                   # Directory to scan
         [int]$MaxAgeDays = 30,           # Files older than this are considered stale
         [int]$MinSizeMB = 5,             # Files larger than this are considered large
-        [int]$First = 10                # Show only first X large files
+        [int]$First = 10,                # Show only first X large files
+        [switch]$ExcludeDirectories      # Exclude directories
     )
     if(-not (Test-Path -Path $Path)){
         Write-Error "Path does not exist:$Path"
@@ -38,20 +39,29 @@ function Find-StaleLargeFilesBySize {
             }
         }
     }
+    $Params = @{
+        Path = $Path
+        ErrorAction = 'SilentlyContinue'
+        Recurse = $true
+    }
+    if ($VerbosePreference -eq 'Continue') {
+        $Params.Add('Verbose', $true)
+    }
+    if ($ExcludeDirectories) {
+        $Params.Add('File', $true)
+    }
 
-    $StaleLargeFiles = Get-ChildItem -Path $Path -Recurse -ErrorAction SilentlyContinue|
+    $StaleLargeFiles = Get-ChildItem @Params|
         ForEach-Object{[Item]::new($_)}|
         Where-Object { 
             $_.LastWriteTime -lt $CutoffDate -and 
             $_.Length -GT $MinSizeMB
             Write-Verbose "LastWriteTime:$($_.LastWriteTime) `t`t Length:$($_.Length) `t`t`t Name:$($_.Name)"
           } | 
-        Sort-Object -Property Length -Descending | 
-        Select-Object -First $First 
+        Sort-Object -Property Length -Descending
         Write-Verbose "CutoffDate: $CutOffDate"
         Write-Verbose "Minimum Size MB: $MinSizeMB"
         Write-Verbose "Sorted by Descending Length..."
-        Write-Verbose "Selecting First $First..."
 
     foreach ($File in $StaleLargeFiles) {
         [pscustomobject]@{
