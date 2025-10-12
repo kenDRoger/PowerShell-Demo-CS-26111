@@ -7,7 +7,6 @@ function Find-StaleLargeFilesBySize {
         [string]$Path,                   # Directory to scan
         [int]$MaxAgeDays = 30,           # Files older than this are considered stale
         [int]$MinSizeMB = 5,             # Files larger than this are considered large
-        [int]$First = 10,                # Show only first X large files
         [switch]$ExcludeDirectories      # Exclude directories
     )
     if(-not (Test-Path -Path $Path)){
